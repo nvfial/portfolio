@@ -1,0 +1,30 @@
+version: '3.8'
+
+# 开发环境配置
+# 使用方式: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  backend:
+    build:
+      target: builder
+    volumes:
+      - ./my-portfolio-backend/src:/app/src
+      - ./my-portfolio-backend/pom.xml:/app/pom.xml
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DEVTOOLS_RESTART_ENABLED: "true"
+    command: mvn spring-boot:run
+
+  frontend:
+    build:
+      target: builder
+    volumes:
+      - ./my-portfolio/src:/app/src
+      - ./my-portfolio/public:/app/public
+      - ./my-portfolio/index.html:/app/index.html
+      - ./my-portfolio/vite.config.js:/app/vite.config.js
+      - ./my-portfolio/package.json:/app/package.json
+    command: npm run dev
+    ports:
+      - "5173:5173"
+
