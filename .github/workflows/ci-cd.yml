@@ -196,13 +196,13 @@ jobs:
 
       - name: 前端依赖安全扫描
         uses: snyk/actions/node@master
-        working-directory: ./my-portfolio
         continue-on-error: true
-        if: ${{ secrets.SNYK_TOKEN != '' }}
+        if: ${{ secrets.SNYK_TOKEN }}
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           args: --severity-threshold=high
+          path: ./my-portfolio
 
       - name: 后端依赖安全扫描
         working-directory: ./my-portfolio-backend
@@ -309,7 +309,6 @@ jobs:
     if: github.ref == 'refs/heads/develop' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'dev')
     environment:
       name: development
-      url: ${{ secrets.DEV_ENV_URL }}
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
@@ -332,7 +331,6 @@ jobs:
     if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
     environment:
       name: staging
-      url: ${{ secrets.STAGING_ENV_URL }}
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
@@ -359,7 +357,6 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production'
     environment:
       name: production
-      url: ${{ secrets.PROD_ENV_URL }}
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
