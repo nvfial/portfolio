@@ -197,7 +197,6 @@ jobs:
       - name: 前端依赖安全扫描
         uses: snyk/actions/node@master
         continue-on-error: true
-        if: ${{ secrets.SNYK_TOKEN }}
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
