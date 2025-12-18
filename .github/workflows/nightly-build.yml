@@ -1,0 +1,57 @@
+name: Nightly Build
+
+# 每日构建和测试
+on:
+  schedule:
+    # 每天凌晨2点运行（UTC时间）
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  nightly-build:
+    name: 夜间构建
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: my-portfolio/package-lock.json
+
+      - name: 设置 Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+          cache-dependency-path: my-portfolio-backend/pom.xml
+
+      - name: 前端依赖安装
+        working-directory: ./my-portfolio
+        run: npm ci
+
+      - name: 前端构建
+        working-directory: ./my-portfolio
+        run: npm run build
+
+      - name: 后端构建
+        working-directory: ./my-portfolio-backend
+        run: mvn clean package -DskipTests
+
+      - name: 运行完整测试套件
+        working-directory: ./my-portfolio-backend
+        run: mvn test
+        continue-on-error: true
+
+      - name: 生成测试报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-test-report
+          path: |
+            my-portfolio-backend/target/surefire-reports
+          retention-days: 30
