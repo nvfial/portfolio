@@ -15,6 +15,7 @@ spring:
 
   # JPA 配置
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: update  # update: 更新表结构, create: 创建表(会删除数据), none: 不操作
     show-sql: true
