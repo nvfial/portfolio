@@ -23,7 +23,7 @@ export const useAuthStore = defineStore('auth', {
     async login(username, password) {
       try {
         const response = await authApi.login(username, password)
-        const { accessToken, refreshToken, user } = response.data
+        const { accessToken, refreshToken, user } = response
 
         this.accessToken = accessToken
         this.refreshToken = refreshToken
@@ -35,7 +35,7 @@ export const useAuthStore = defineStore('auth', {
         localStorage.setItem('accessToken', accessToken)
         localStorage.setItem('refreshToken', refreshToken)
 
-        return response.data
+        return response
       } catch (error) {
         this.logout()
         throw error
@@ -49,7 +49,7 @@ export const useAuthStore = defineStore('auth', {
 
       try {
         const response = await authApi.refresh(this.refreshToken)
-        const { accessToken, refreshToken } = response.data
+        const { accessToken, refreshToken } = response
 
         this.accessToken = accessToken
         this.refreshToken = refreshToken
@@ -67,10 +67,10 @@ export const useAuthStore = defineStore('auth', {
     async fetchCurrentUser() {
       try {
         const response = await authApi.getCurrentUser()
-        this.user = response.data
-        this.permissions = response.data.permissions || []
-        this.roles = response.data.roles || []
-        return response.data
+        this.user = response
+        this.permissions = response.permissions || []
+        this.roles = response.roles || []
+        return response
       } catch (error) {
         this.logout()
         throw error
