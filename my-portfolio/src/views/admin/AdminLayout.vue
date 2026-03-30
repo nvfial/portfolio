@@ -67,7 +67,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { RouterLink, RouterView, useRouter } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
+import { useAuthStore } from '../../stores/auth'
 
 const router = useRouter()
 const authStore = useAuthStore()
