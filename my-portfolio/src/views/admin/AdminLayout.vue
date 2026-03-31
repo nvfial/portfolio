@@ -30,12 +30,6 @@
           <span>画廊</span>
         </RouterLink>
 
-        <RouterLink to="/admin/review" class="nav-item" v-if="authStore.isReviewer" :class="{ active: $route.path === '/admin/review' }">
-          <span class="nav-icon">✅</span>
-          <span>审核</span>
-          <span class="badge" v-if="pendingCount > 0">{{ pendingCount }}</span>
-        </RouterLink>
-
         <RouterLink to="/admin/messages" class="nav-item" :class="{ active: $route.path === '/admin/messages' }">
           <span class="nav-icon">💬</span>
           <span>消息</span>
@@ -65,16 +59,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { onMounted } from 'vue'
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 
 const router = useRouter()
 const authStore = useAuthStore()
-
-const pendingCount = ref(0)
-
-const roles = computed(() => authStore.roles || [])
 
 onMounted(async () => {
   if (!authStore.isAuthenticated) {

@@ -13,8 +13,8 @@ const DashboardView = () => import('../views/admin/DashboardView.vue')
 const MessagesView = () => import('../views/admin/MessagesView.vue')
 const DataScreenView = () => import('../views/admin/DataScreenView.vue')
 const ArticleEditorView = () => import('../views/admin/ArticleEditorView.vue')
-const ReviewView = () => import('../views/admin/ReviewView.vue')
 const ArticlesView = () => import('../views/admin/ArticlesView.vue')
+const GalleryView = () => import('../views/admin/GalleryView.vue')
 
 const routes = [
   { path: '/', component: HomeView, name: 'Home' },
@@ -26,14 +26,13 @@ const routes = [
   {
     path: '/admin',
     component: AdminLayout,
-    meta: { requiresAuth: true, requiredRoles: ['ADMIN'] },
+    meta: { requiresAuth: true },
     children: [
       { path: '', component: DashboardView, name: 'AdminDashboard' },
       { path: 'articles', component: ArticlesView, name: 'AdminArticles' },
       { path: 'editor', component: ArticleEditorView, name: 'ArticleEditor' },
       { path: 'editor/:id', component: ArticleEditorView, name: 'ArticleEdit' },
-      { path: 'review', component: ReviewView, name: 'Review', meta: { requiresAuth: true, requiredRoles: ['ADMIN', 'REVIEWER'] } },
-      { path: 'gallery', component: () => {}, name: 'AdminGallery' },
+      { path: 'gallery', component: GalleryView, name: 'AdminGallery' },
       { path: 'messages', component: MessagesView, name: 'AdminMessages' },
       { path: 'screen', component: DataScreenView, name: 'DataScreen' }
     ]
@@ -54,14 +53,6 @@ router.beforeEach((to, from, next) => {
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     next('/login')
     return
-  }
-
-  if (to.meta.requiredRoles && to.meta.requiredRoles.length > 0) {
-    const hasRequiredRole = to.meta.requiredRoles.some(role => authStore.roles?.includes(role))
-    if (!hasRequiredRole) {
-      next('/')
-      return
-    }
   }
 
   if (to.path === '/login' && authStore.isAuthenticated) {

@@ -3,12 +3,11 @@
     <div class="editor-header">
       <h1>{{ isEdit ? '编辑文章' : '撰写新文章' }}</h1>
       <div class="editor-actions">
-        <span class="status-badge" :class="currentStatus">{{ statusText }}</span>
         <button @click="saveDraft" class="btn btn-secondary" :disabled="saving">
           保存草稿
         </button>
-        <button @click="submitReview" class="btn btn-primary" :disabled="saving || !canSubmit">
-          提交审核
+        <button @click="publishArticle" class="btn btn-primary" :disabled="saving || !canPublish">
+          {{ form.isPublished ? '取消发布' : '发布文章' }}
         </button>
       </div>
     </div>
@@ -21,12 +20,11 @@
             type="text"
             placeholder="文章标题"
             class="title-input"
-            :disabled="!canEdit"
           />
         </div>
 
         <div class="form-group">
-          <select v-model="form.categoryId" class="category-select" :disabled="!canEdit">
+          <select v-model="form.categoryId" class="category-select">
             <option value="">选择分类</option>
             <option v-for="cat in categories" :key="cat.id" :value="cat.id">
               {{ cat.domainName }} / {{ cat.name }}
@@ -35,13 +33,12 @@
         </div>
 
         <div class="form-group">
-          <div class="cover-uploader" @click="triggerCoverUpload" v-if="canEdit">
+          <div class="cover-uploader" @click="triggerCoverUpload">
             <img v-if="form.coverImage" :src="form.coverImage" alt="封面" class="cover-preview" />
             <div v-else class="cover-placeholder">
               <span>点击上传封面图片</span>
             </div>
           </div>
-          <img v-else-if="form.coverImage" :src="form.coverImage" alt="封面" class="cover-preview" />
           <input
             ref="coverInput"
             type="file"
@@ -56,7 +53,6 @@
             v-model="form.content"
             placeholder="撰写文章内容..."
             class="content-textarea"
-            :disabled="!canEdit"
           ></textarea>
         </div>
       </div>
@@ -68,11 +64,10 @@
             <div class="tags-list">
               <span v-for="tag in form.tags" :key="tag" class="tag">
                 {{ tag }}
-                <button v-if="canEdit" @click="removeTag(tag)" class="tag-remove">×</button>
+                <button @click="removeTag(tag)" class="tag-remove">×</button>
               </span>
             </div>
             <input
-              v-if="canEdit"
               v-model="newTag"
               type="text"
               placeholder="添加标签"
@@ -88,7 +83,6 @@
             v-model="form.summary"
             placeholder="文章摘要（可选）"
             class="summary-textarea"
-            :disabled="!canEdit"
           ></textarea>
         </div>
 
@@ -96,55 +90,50 @@
           <h3>SEO设置</h3>
           <div class="form-group">
             <label>SEO标题</label>
-            <input v-model="form.seoTitle" type="text" placeholder="SEO标题" :disabled="!canEdit" />
+            <input v-model="form.seoTitle" type="text" placeholder="SEO标题" />
           </div>
           <div class="form-group">
             <label>SEO描述</label>
-            <textarea v-model="form.seoDescription" placeholder="SEO描述" :disabled="!canEdit"></textarea>
+            <textarea v-model="form.seoDescription" placeholder="SEO描述" class="seo-textarea"></textarea>
           </div>
         </div>
 
-        <div class="sidebar-section" v-if="workflow">
-          <h3>工作流状态</h3>
-          <div class="workflow-info">
-            <div class="workflow-item">
-              <span class="label">当前状态:</span>
-              <span class="value">{{ workflow.statusDescription }}</span>
-            </div>
-            <div class="workflow-item" v-if="workflow.authorName">
-              <span class="label">作者:</span>
-              <span class="value">{{ workflow.authorName }}</span>
-            </div>
-            <div class="workflow-item" v-if="workflow.submittedAt">
-              <span class="label">提交时间:</span>
-              <span class="value">{{ formatDate(workflow.submittedAt) }}</span>
-            </div>
-            <div class="workflow-item" v-if="workflow.reviewComment">
-              <span class="label">审核意见:</span>
-              <span class="value review-comment">{{ workflow.reviewComment }}</span>
-            </div>
+        <div class="sidebar-section">
+          <h3>文章设置</h3>
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" v-model="form.isFeatured" />
+              推荐文章
+            </label>
           </div>
+          <div class="form-group">
+            <label>预计阅读时间（分钟）</label>
+            <input v-model.number="form.readTime" type="number" min="1" />
+          </div>
+        </div>
 
-          <div class="workflow-actions" v-if="availableActions.length > 0">
-            <button
-              v-for="action in availableActions"
-              :key="action.targetStatus"
-              @click="handleWorkflowAction(action)"
-              class="btn btn-sm"
-              :class="getActionClass(action)"
-            >
-              {{ action.action }}
-            </button>
+        <div class="sidebar-section" v-if="isEdit">
+          <h3>统计信息</h3>
+          <div class="stats">
+            <div class="stat-item">
+              <span class="stat-label">阅读量</span>
+              <span class="stat-value">{{ articleStats.viewCount || 0 }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">点赞数</span>
+              <span class="stat-value">{{ articleStats.likeCount || 0 }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">创建时间</span>
+              <span class="stat-value">{{ formatDate(articleStats.createdAt) }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">更新时间</span>
+              <span class="stat-value">{{ formatDate(articleStats.updatedAt) }}</span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-
-    <div class="editor-footer">
-      <span class="auto-save-status" v-if="lastSaved">
-        自动保存于 {{ formatTime(lastSaved) }}
-      </span>
-      <span class="word-count">字数: {{ wordCount }}</span>
     </div>
   </div>
 </template>
@@ -152,15 +141,15 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { articleApi, uploadApi, categoryApi } from '../../utils/auth'
 import { useAuthStore } from '../../stores/auth'
+import { articleApi, categoryApi, uploadApi } from '../../utils/auth'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 
+const isEdit = computed(() => !!route.params.id)
 const articleId = computed(() => route.params.id)
-const isEdit = computed(() => !!articleId.value)
 
 const form = ref({
   title: '',
@@ -170,38 +159,20 @@ const form = ref({
   categoryId: '',
   tags: [],
   seoTitle: '',
-  seoDescription: ''
+  seoDescription: '',
+  isFeatured: false,
+  isPublished: false,
+  readTime: 5,
+  authorId: authStore.user?.id,
+  authorName: authStore.user?.displayName || authStore.user?.username
 })
 
-const newTag = ref('')
 const categories = ref([])
-const workflow = ref(null)
+const newTag = ref('')
 const saving = ref(false)
-const lastSaved = ref(null)
-const coverInput = ref(null)
+const articleStats = ref({})
 
-let autoSaveTimer = null
-
-const currentStatus = computed(() => workflow.value?.currentStatus?.toLowerCase() || 'draft')
-const statusText = computed(() => {
-  const statusMap = {
-    DRAFT: '草稿',
-    EDITING: '编辑中',
-    PENDING_REVIEW: '待审核',
-    PUBLISHED: '已发布',
-    REJECTED: '已驳回',
-    OFFLINE: '已下线'
-  }
-  return statusMap[workflow.value?.currentStatus] || '草稿'
-})
-
-const canEdit = computed(() => {
-  if (!authStore.isAuthenticated) return false
-  const status = workflow.value?.currentStatus
-  return ['DRAFT', 'EDITING', 'REJECTED'].includes(status) || !isEdit.value
-})
-
-const canSubmit = computed(() => {
+const canPublish = computed(() => {
   return form.value.title && form.value.content && form.value.categoryId
 })
 
@@ -209,35 +180,19 @@ const wordCount = computed(() => {
   return form.value.content.replace(/\s/g, '').length
 })
 
-const availableActions = computed(() => {
-  if (!workflow.value?.availableTransitions) return []
-  return workflow.value.availableTransitions.filter(t => t.allowed)
-})
-
 onMounted(async () => {
   await loadCategories()
   
   if (isEdit.value) {
     await loadArticle()
-  } else {
-    workflow.value = {
-      currentStatus: 'DRAFT',
-      statusDescription: '草稿'
-    }
   }
 
-  autoSaveTimer = setInterval(autoSave, 120000)
-})
-
-onUnmounted(() => {
-  if (autoSaveTimer) {
-    clearInterval(autoSaveTimer)
-  }
+  setInterval(autoSave, 120000)
 })
 
 watch(() => form.value.content, () => {
-  if (isEdit.value && workflow.value?.currentStatus === 'DRAFT') {
-    workflow.value.currentStatus = 'EDITING'
+  if (isEdit.value && form.value.readTime === 5) {
+    form.value.readTime = Math.max(1, Math.ceil(wordCount.value / 500))
   }
 })
 
@@ -258,16 +213,25 @@ const loadArticle = async () => {
     form.value = {
       title: article.title,
       content: article.content,
-      summary: article.summary,
-      coverImage: article.coverImage,
-      categoryId: article.categoryId,
+      summary: article.summary || '',
+      coverImage: article.coverImage || '',
+      categoryId: article.categoryId || '',
       tags: article.tags || [],
-      seoTitle: article.seoTitle,
-      seoDescription: article.seoDescription
+      seoTitle: article.seoTitle || '',
+      seoDescription: article.seoDescription || '',
+      isFeatured: article.isFeatured || false,
+      isPublished: article.isPublished || false,
+      readTime: article.readTime || 5,
+      authorId: article.authorId,
+      authorName: article.authorName
     }
 
-    const workflowResponse = await articleApi.getWorkflowState(articleId.value)
-    workflow.value = workflowResponse
+    articleStats.value = {
+      viewCount: article.viewCount,
+      likeCount: article.likeCount,
+      createdAt: article.createdAt,
+      updatedAt: article.updatedAt
+    }
   } catch (error) {
     console.error('加载文章失败:', error)
   }
@@ -278,18 +242,19 @@ const saveDraft = async () => {
   try {
     const data = {
       ...form.value,
-      status: workflow.value?.currentStatus === 'EDITING' ? 'EDITING' : 'DRAFT'
+      authorId: authStore.user?.id,
+      authorName: authStore.user?.displayName || authStore.user?.username
     }
 
     if (isEdit.value) {
       await articleApi.update(articleId.value, data)
     } else {
       const response = await articleApi.create(data)
-      router.replace(`/admin/editor/${response.id}`)
+      if (!isEdit.value) {
+        router.replace(`/admin/editor/${response.id}`)
+      }
     }
-
-    lastSaved.value = new Date()
-    await loadArticle()
+    alert('保存成功')
   } catch (error) {
     console.error('保存失败:', error)
     alert('保存失败')
@@ -298,70 +263,31 @@ const saveDraft = async () => {
   }
 }
 
+const publishArticle = async () => {
+  form.value.isPublished = !form.value.isPublished
+  await saveDraft()
+}
+
 const autoSave = async () => {
-  if (isEdit.value && form.value.title) {
-    try {
-      await articleApi.update(articleId.value, {
-        ...form.value,
-        status: 'EDITING'
-      })
-      lastSaved.value = new Date()
-    } catch (error) {
-      console.error('自动保存失败:', error)
-    }
-  }
-}
-
-const submitReview = async () => {
-  if (!canSubmit.value) {
-    alert('请填写标题、内容和分类')
-    return
-  }
-
-  saving.value = true
+  if (!form.value.title && !form.value.content) return
+  
   try {
-    await saveDraft()
-    await articleApi.submitForReview(articleId.value, '提交审核')
-    await loadArticle()
-  } catch (error) {
-    console.error('提交审核失败:', error)
-    alert('提交审核失败')
-  } finally {
-    saving.value = false
-  }
-}
-
-const handleWorkflowAction = async (action) => {
-  const confirmText = {
-    '提交审核': '确定要提交审核吗？',
-    '通过审核': '确定要通过审核吗？',
-    '驳回': '确定要驳回吗？',
-    '下线': '确定要下线吗？',
-    '重新发布': '确定要重新发布吗？'
-  }
-
-  if (!confirm(confirmText[action.action])) return
-
-  try {
-    switch (action.targetStatus) {
-      case 'PENDING_REVIEW':
-        await articleApi.submitForReview(articleId.value)
-        break
-      case 'PUBLISHED':
-        await articleApi.approve(articleId.value)
-        break
-      case 'REJECTED':
-        const comment = prompt('请输入驳回原因:')
-        if (comment) await articleApi.reject(articleId.value, comment)
-        break
-      case 'OFFLINE':
-        await articleApi.offline(articleId.value)
-        break
+    const data = {
+      ...form.value,
+      authorId: authStore.user?.id,
+      authorName: authStore.user?.displayName || authStore.user?.username
     }
-    await loadArticle()
+
+    if (isEdit.value) {
+      await articleApi.update(articleId.value, data)
+    } else if (form.value.title) {
+      const response = await articleApi.create(data)
+      if (!isEdit.value && articleId.value) {
+        router.replace(`/admin/editor/${response.id}`)
+      }
+    }
   } catch (error) {
-    console.error('操作失败:', error)
-    alert('操作失败')
+    console.error('自动保存失败:', error)
   }
 }
 
@@ -394,28 +320,15 @@ const removeTag = (tag) => {
   form.value.tags = form.value.tags.filter(t => t !== tag)
 }
 
-const getActionClass = (action) => {
-  const classMap = {
-    '提交审核': 'btn-primary',
-    '通过审核': 'btn-success',
-    '驳回': 'btn-danger',
-    '下线': 'btn-warning',
-    '重新发布': 'btn-primary'
-  }
-  return classMap[action.action] || 'btn-secondary'
-}
-
 const formatDate = (date) => {
+  if (!date) return '-'
   return new Date(date).toLocaleString('zh-CN')
-}
-
-const formatTime = (date) => {
-  return new Date(date).toLocaleTimeString('zh-CN')
 }
 </script>
 
 <style scoped>
 .article-editor {
+  padding: 20px;
   max-width: 1400px;
   margin: 0 auto;
 }
@@ -424,61 +337,38 @@ const formatTime = (date) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #eee;
 }
 
 .editor-header h1 {
-  font-size: 1.5rem;
-  color: var(--text-primary);
+  font-size: 24px;
+  margin: 0;
 }
 
 .editor-actions {
   display: flex;
+  gap: 10px;
   align-items: center;
-  gap: 1rem;
-}
-
-.status-badge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
-.status-badge.draft {
-  background: #e2e8f0;
-  color: #4a5568;
-}
-
-.status-badge.editing {
-  background: #fef3c7;
-  color: #d97706;
-}
-
-.status-badge.pending_review {
-  background: #dbeafe;
-  color: #2563eb;
-}
-
-.status-badge.published {
-  background: #d1fae5;
-  color: #059669;
-}
-
-.status-badge.rejected {
-  background: #fee2e2;
-  color: #dc2626;
 }
 
 .btn {
-  padding: 0.5rem 1rem;
+  padding: 8px 16px;
   border: none;
-  border-radius: 0.5rem;
-  font-weight: 500;
+  border-radius: 4px;
   cursor: pointer;
-  transition: all 0.2s;
+  font-size: 14px;
+}
+
+.btn-primary {
+  background: #3498db;
+  color: white;
+}
+
+.btn-secondary {
+  background: #95a5a6;
+  color: white;
 }
 
 .btn:disabled {
@@ -486,234 +376,163 @@ const formatTime = (date) => {
   cursor: not-allowed;
 }
 
-.btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.btn-secondary {
-  background: #e2e8f0;
-  color: #4a5568;
-}
-
-.btn-success {
-  background: #10b981;
-  color: white;
-}
-
-.btn-danger {
-  background: #ef4444;
-  color: white;
-}
-
-.btn-warning {
-  background: #f59e0b;
-  color: white;
-}
-
 .editor-content {
   display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 2rem;
+  grid-template-columns: 1fr 300px;
+  gap: 20px;
 }
 
 .editor-main {
-  background: var(--bg-secondary);
-  border-radius: 1rem;
-  padding: 1.5rem;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .form-group {
-  margin-bottom: 1rem;
+  margin-bottom: 15px;
 }
 
 .title-input {
   width: 100%;
-  padding: 0.75rem;
-  font-size: 1.25rem;
-  border: 2px solid var(--border-color);
-  border-radius: 0.5rem;
-  background: var(--bg-primary);
-  color: var(--text-primary);
-}
-
-.title-input:focus {
-  outline: none;
-  border-color: #667eea;
+  font-size: 24px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
 }
 
 .category-select {
   width: 100%;
-  padding: 0.75rem;
-  border: 2px solid var(--border-color);
-  border-radius: 0.5rem;
-  background: var(--bg-primary);
-  color: var(--text-primary);
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
 }
 
 .cover-uploader {
-  width: 100%;
-  height: 200px;
-  border: 2px dashed var(--border-color);
-  border-radius: 0.5rem;
   cursor: pointer;
+  border: 2px dashed #ddd;
+  border-radius: 8px;
   overflow: hidden;
-}
-
-.cover-placeholder {
-  width: 100%;
-  height: 100%;
+  height: 200px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-secondary);
 }
 
 .cover-preview {
   width: 100%;
-  height: 100%;
+  height: 200px;
   object-fit: cover;
+}
+
+.cover-placeholder {
+  color: #999;
 }
 
 .content-textarea {
   width: 100%;
-  min-height: 500px;
-  padding: 1rem;
-  font-size: 1rem;
-  line-height: 1.8;
-  border: 2px solid var(--border-color);
-  border-radius: 0.5rem;
-  background: var(--bg-primary);
-  color: var(--text-primary);
+  min-height: 400px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: inherit;
   resize: vertical;
 }
 
 .editor-sidebar {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 15px;
 }
 
 .sidebar-section {
-  background: var(--bg-secondary);
-  border-radius: 1rem;
-  padding: 1rem;
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .sidebar-section h3 {
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-  margin-bottom: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  color: #333;
 }
 
 .tags-input {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 5px;
 }
 
 .tags-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  width: 100%;
+  gap: 5px;
 }
 
 .tag {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.25rem 0.5rem;
-  background: #667eea;
-  color: white;
-  border-radius: 0.25rem;
-  font-size: 0.875rem;
+  gap: 5px;
+  background: #e0f7fa;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
 }
 
 .tag-remove {
   background: none;
   border: none;
-  color: white;
   cursor: pointer;
-  font-size: 1rem;
-  line-height: 1;
+  color: #666;
+  padding: 0;
+  font-size: 14px;
 }
 
 .tag-input {
-  flex: 1;
-  min-width: 100px;
-  padding: 0.25rem 0.5rem;
-  border: 1px solid var(--border-color);
-  border-radius: 0.25rem;
-  font-size: 0.875rem;
+  width: 100%;
+  padding: 5px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-top: 5px;
 }
 
-.summary-textarea {
+.summary-textarea, .seo-textarea {
   width: 100%;
-  min-height: 80px;
-  padding: 0.5rem;
-  border: 1px solid var(--border-color);
-  border-radius: 0.25rem;
+  height: 80px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
   resize: vertical;
 }
 
-.workflow-info {
+.checkbox-label {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
 }
 
-.workflow-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+.stats {
+  font-size: 12px;
 }
 
-.workflow-item .label {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-}
-
-.workflow-item .value {
-  font-size: 0.875rem;
-  color: var(--text-primary);
-}
-
-.review-comment {
-  color: #dc2626;
-  font-style: italic;
-}
-
-.workflow-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 1rem;
-}
-
-.btn-sm {
-  padding: 0.25rem 0.75rem;
-  font-size: 0.75rem;
-}
-
-.editor-footer {
+.stat-item {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-color);
-  color: var(--text-secondary);
-  font-size: 0.875rem;
+  padding: 5px 0;
+  border-bottom: 1px solid #eee;
 }
 
-.auto-save-status {
-  color: #10b981;
+.stat-label {
+  color: #666;
 }
 
-@media (max-width: 1024px) {
+.stat-value {
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
   .editor-content {
     grid-template-columns: 1fr;
   }
