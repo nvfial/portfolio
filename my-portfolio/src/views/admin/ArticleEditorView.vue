@@ -49,11 +49,86 @@
         </div>
 
         <div class="form-group">
-          <textarea
-            v-model="form.content"
-            placeholder="撰写文章内容..."
-            class="content-textarea"
-          ></textarea>
+          <div class="md-editor">
+            <div class="md-toolbar">
+              <button type="button" @click="insertMarkdown('**', '**')" title="加粗">
+                <strong>B</strong>
+              </button>
+              <button type="button" @click="insertMarkdown('*', '*')" title="斜体">
+                <em>I</em>
+              </button>
+              <button type="button" @click="insertMarkdown('~~', '~~')" title="删除线">
+                <s>S</s>
+              </button>
+              <span class="toolbar-divider"></span>
+              <button type="button" @click="insertMarkdown('# ', '')" title="标题1">
+                H1
+              </button>
+              <button type="button" @click="insertMarkdown('## ', '')" title="标题2">
+                H2
+              </button>
+              <button type="button" @click="insertMarkdown('### ', '')" title="标题3">
+                H3
+              </button>
+              <span class="toolbar-divider"></span>
+              <button type="button" @click="insertMarkdown('- ', '')" title="无序列表">
+                •
+              </button>
+              <button type="button" @click="insertMarkdown('1. ', '')" title="有序列表">
+                1.
+              </button>
+              <button type="button" @click="insertMarkdown('- [ ] ', '')" title="任务列表">
+                ☑
+              </button>
+              <span class="toolbar-divider"></span>
+              <button type="button" @click="insertMarkdown('[', '](url)')" title="链接">
+                🔗
+              </button>
+              <button type="button" @click="insertMarkdown('![alt](', ')')" title="图片">
+                🖼️
+              </button>
+              <button type="button" @click="insertMarkdown('> ', '')" title="引用">
+                "
+              </button>
+              <button type="button" @click="insertMarkdown('```\n', '\n```')" title="代码块">
+                &lt;/&gt;
+              </button>
+              <button type="button" @click="insertMarkdown('`', '`')" title="行内代码">
+                `
+              </button>
+              <span class="toolbar-divider"></span>
+              <button type="button" @click="insertMarkdown('---\n', '')" title="分隔线">
+                —
+              </button>
+              <button type="button" @click="insertMarkdown('| 列1 | 列2 |\n| --- | --- |\n| 内容 | 内容 |', '')" title="表格">
+                ⊞
+              </button>
+            </div>
+            
+            <div class="md-editor-body">
+              <textarea
+                v-model="form.content"
+                placeholder="撰写文章内容... (支持 Markdown 语法)"
+                class="content-textarea"
+                ref="contentTextarea"
+              ></textarea>
+              
+              <div v-if="showPreview" class="md-preview">
+                <div class="preview-header">
+                  <span>预览</span>
+                  <button type="button" @click="showPreview = false">✕</button>
+                </div>
+                <div class="preview-content markdown-body" v-html="previewHtml"></div>
+              </div>
+            </div>
+            
+            <div class="md-footer">
+              <span class="word-count">{{ wordCount }} 字</span>
+              <button type="button" class="preview-toggle" @click="showPreview = !showPreview">
+                {{ showPreview ? '隐藏预览' : '显示预览' }}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -139,10 +214,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import { articleApi, categoryApi, uploadApi } from '../../utils/auth'
+import { marked } from 'marked'
 
 const route = useRoute()
 const router = useRouter()
@@ -171,6 +247,8 @@ const categories = ref([])
 const newTag = ref('')
 const saving = ref(false)
 const articleStats = ref({})
+const contentTextarea = ref(null)
+const showPreview = ref(false)
 
 const canPublish = computed(() => {
   return form.value.title && form.value.content && form.value.categoryId
@@ -178,6 +256,10 @@ const canPublish = computed(() => {
 
 const wordCount = computed(() => {
   return form.value.content.replace(/\s/g, '').length
+})
+
+const previewHtml = computed(() => {
+  return marked(form.value.content)
 })
 
 onMounted(async () => {
@@ -323,6 +405,27 @@ const removeTag = (tag) => {
 const formatDate = (date) => {
   if (!date) return '-'
   return new Date(date).toLocaleString('zh-CN')
+}
+
+const insertMarkdown = (before, after) => {
+  if (!contentTextarea.value) return
+  
+  const textarea = contentTextarea.value
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+  const selectedText = form.value.content.substring(start, end)
+  
+  const newText = before + selectedText + after
+  form.value.content = 
+    form.value.content.substring(0, start) + 
+    newText + 
+    form.value.content.substring(end)
+  
+  nextTick(() => {
+    textarea.focus()
+    const newCursorPos = start + before.length + selectedText.length
+    textarea.setSelectionRange(newCursorPos, newCursorPos)
+  })
 }
 </script>
 
@@ -536,5 +639,185 @@ const formatDate = (date) => {
   .editor-content {
     grid-template-columns: 1fr;
   }
+}
+
+.md-editor {
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: white;
+}
+
+.md-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.md-toolbar button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 32px;
+  padding: 0 8px;
+  border: none;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  transition: all 0.2s;
+}
+
+.md-toolbar button:hover {
+  background: #667eea;
+  color: white;
+}
+
+.md-toolbar .toolbar-divider {
+  width: 1px;
+  height: 24px;
+  background: #ddd;
+  margin: 0 8px;
+}
+
+.md-editor-body {
+  display: flex;
+  min-height: 400px;
+}
+
+.md-editor-body .content-textarea {
+  flex: 1;
+  border: none;
+  padding: 20px;
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: 14px;
+  line-height: 1.8;
+  resize: vertical;
+  min-height: 400px;
+}
+
+.md-editor-body .content-textarea:focus {
+  outline: none;
+}
+
+.md-preview {
+  width: 50%;
+  border-left: 1px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+  background: #fafafa;
+}
+
+.preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: white;
+  border-bottom: 1px solid #e0e0e0;
+  font-weight: 600;
+  color: #666;
+}
+
+.preview-header button {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #999;
+  padding: 4px 8px;
+}
+
+.preview-header button:hover {
+  color: #333;
+}
+
+.preview-content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.md-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border-top: 1px solid #e0e0e0;
+}
+
+.word-count {
+  font-size: 13px;
+  color: #666;
+}
+
+.preview-toggle {
+  padding: 8px 16px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #666;
+  transition: all 0.2s;
+}
+
+.preview-toggle:hover {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+.md-editor .markdown-body {
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.md-editor .markdown-body h1,
+.md-editor .markdown-body h2,
+.md-editor .markdown-body h3 {
+  margin-top: 20px;
+  margin-bottom: 12px;
+}
+
+.md-editor .markdown-body code {
+  padding: 2px 6px;
+  background: #f0f0f0;
+  border-radius: 4px;
+  font-family: 'Fira Code', monospace;
+  font-size: 13px;
+}
+
+.md-editor .markdown-body pre {
+  background: #282c34;
+  color: #abb2bf;
+  padding: 16px;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+.md-editor .markdown-body pre code {
+  background: none;
+  padding: 0;
+  color: inherit;
+}
+
+.md-editor .markdown-body blockquote {
+  border-left: 4px solid #667eea;
+  background: #f8f9fa;
+  padding: 12px 16px;
+  margin: 12px 0;
+}
+
+.md-editor .markdown-body img {
+  max-width: 100%;
+  border-radius: 8px;
 }
 </style>

@@ -70,5 +70,29 @@ export const statsApi = {
   getDashboardData: () => api.get('/admin/dashboard')
 }
 
+export const knowledgeApi = {
+  getArticles: (params) => api.get('/knowledge/articles', { params }),
+  getArticleById: (id) => api.get(`/knowledge/articles/${id}`),
+  getArticleBySlug: (slug) => api.get(`/knowledge/articles/slug/${slug}`),
+  getArticlesByCategory: (categoryId) => api.get(`/knowledge/articles/category/${categoryId}`),
+  getRecentArticles: (limit = 10) => api.get('/knowledge/articles/recent', { params: { limit } }),
+  getFeaturedArticles: () => api.get('/knowledge/articles/featured'),
+  searchArticles: (keyword, page = 0, size = 20) => api.get('/knowledge/articles/search', { params: { keyword, page, size } }),
+  incrementView: (id) => api.post(`/knowledge/articles/${id}/view`),
+  toggleLike: (id) => api.post(`/knowledge/articles/${id}/like`)
+}
+
+export const knowledgeCategoryApi = {
+  getAll: () => api.get('/knowledge/categories'),
+  getByDomain: (domainId) => api.get(`/knowledge/categories/domain/${domainId}`),
+  getById: (id) => api.get(`/knowledge/categories/${id}`),
+  getBySlug: (domainSlug, categorySlug) => api.get(`/knowledge/categories/domain/${domainSlug}/${categorySlug}`)
+}
+
+export const knowledgeDomainApi = {
+  getAll: () => api.get('/knowledge/domains'),
+  getBySlug: (slug) => api.get(`/knowledge/domains/${slug}`)
+}
+
 export default api
 

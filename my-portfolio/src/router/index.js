@@ -16,12 +16,17 @@ const ArticleEditorView = () => import('../views/admin/ArticleEditorView.vue')
 const ArticlesView = () => import('../views/admin/ArticlesView.vue')
 const GalleryView = () => import('../views/admin/GalleryView.vue')
 
+const KnowledgeView = () => import('../views/KnowledgeView.vue')
+const KnowledgeArticleView = () => import('../views/KnowledgeArticleView.vue')
+
 const routes = [
   { path: '/', component: HomeView, name: 'Home' },
   { path: '/projects', component: ProjectsView, name: 'Projects' },
   { path: '/about', component: AboutView, name: 'About' },
   { path: '/contact', component: ContactView, name: 'Contact' },
   { path: '/testimonials', component: TestimonialsView, name: 'Testimonials' },
+  { path: '/knowledge', component: KnowledgeView, name: 'Knowledge' },
+  { path: '/knowledge/:slug', component: KnowledgeArticleView, name: 'KnowledgeArticle' },
   { path: '/login', component: LoginView, name: 'Login' },
   {
     path: '/admin',
