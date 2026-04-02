@@ -112,6 +112,26 @@ export const mediaApi = {
   deleteMedia: (id) => api.delete(`/admin/media/${id}`)
 }
 
+export const resourceApi = {
+  getAll: (params) => api.get('/resources', { params }),
+  getById: (id) => api.get(`/resources/${id}`),
+  create: (data) => api.post('/resources', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  update: (id, data) => api.put(`/resources/${id}`, data, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  delete: (id) => api.delete(`/resources/${id}`),
+  getCategories: () => api.get('/resources/categories'),
+  getDownloadUrl: (id) => api.get(`/resources/${id}/download`),
+  recordDownload: (id) => api.post(`/resources/${id}/record`),
+  getPopular: (limit) => api.get('/resources/popular', { params: { limit } }),
+  getRecent: (limit) => api.get('/resources/recent', { params: { limit } })
+}
+
+export const resourceCategoryApi = {
+  getAll: () => api.get('/resources/categories'),
+  create: (data) => api.post('/resources/categories', data),
+  update: (id, data) => api.put(`/resources/categories/${id}`, data),
+  delete: (id) => api.delete(`/resources/categories/${id}`)
+}
+
 export const characterApi = {
   getAll: () => api.get('/characters'),
   getActive: () => api.get('/characters/active'),

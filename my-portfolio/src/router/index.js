@@ -18,12 +18,15 @@ const GalleryView = () => import('../views/admin/GalleryView.vue')
 const MediaView = () => import('../views/admin/MediaView.vue')
 const ProjectImportView = () => import('../views/admin/ProjectImportView.vue')
 const CharacterManageView = () => import('../views/admin/CharacterManageView.vue')
+const ResourceManageView = () => import('../views/admin/ResourceManageView.vue')
 
 const KnowledgeView = () => import('../views/KnowledgeView.vue')
 const KnowledgeArticleView = () => import('../views/KnowledgeArticleView.vue')
 
 const CastView = () => import('../views/CastView.vue')
 const CharacterView = () => import('../views/CharacterView.vue')
+const ResourceView = () => import('../views/ResourceView.vue')
+const ResourceDetailView = () => import('../views/ResourceDetailView.vue')
 
 const routes = [
   { path: '/', component: HomeView, name: 'Home' },
@@ -35,6 +38,8 @@ const routes = [
   { path: '/knowledge/:slug', component: KnowledgeArticleView, name: 'KnowledgeArticle' },
   { path: '/cast', component: CastView, name: 'Cast' },
   { path: '/character/:id', component: CharacterView, name: 'Character' },
+  { path: '/resources', component: ResourceView, name: 'Resources' },
+  { path: '/resources/:id', component: ResourceDetailView, name: 'ResourceDetail' },
   { path: '/login', component: LoginView, name: 'Login' },
   {
     path: '/admin',
@@ -50,7 +55,8 @@ const routes = [
       { path: 'messages', component: MessagesView, name: 'AdminMessages' },
       { path: 'screen', component: DataScreenView, name: 'DataScreen' },
       { path: 'project-import', component: ProjectImportView, name: 'ProjectImport' },
-      { path: 'characters', component: CharacterManageView, name: 'CharacterManage' }
+      { path: 'characters', component: CharacterManageView, name: 'CharacterManage' },
+      { path: 'resources', component: ResourceManageView, name: 'ResourceManage' }
     ]
   }
 ]

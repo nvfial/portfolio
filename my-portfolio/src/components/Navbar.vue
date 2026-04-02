@@ -52,6 +52,7 @@ const navItems = [
   { label: '首页', path: '/' },
   { label: '项目', path: '/projects' },
   { label: '角色', path: '/cast' },
+  { label: '资源', path: '/resources' },
   { label: '知识库', path: '/knowledge' },
   { label: '关于我', path: '/about' },
   { label: '留言板', path: '/testimonials' },
