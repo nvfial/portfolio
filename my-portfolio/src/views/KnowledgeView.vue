@@ -130,10 +130,10 @@
                 {{ article.category.name }}
               </div>
               <h3 class="card-title">
-                {{ article.title }}
+                <span v-html="article._highlightedTitle || article.title"></span>
                 <span class="featured-badge" v-if="article.isFeatured">⭐</span>
               </h3>
-              <p class="card-summary">{{ article.summary }}</p>
+              <p class="card-summary" v-html="article._highlightedSummary || article.summary"></p>
               <div class="card-tags" v-if="article.tags && article.tags.length">
                 <span 
                   v-for="tag in article.tags.slice(0, 3)" 
@@ -151,8 +151,8 @@
             </div>
             <div class="card-overlay">
               <div class="overlay-content">
-                <h4>{{ article.title }}</h4>
-                <p>{{ article.summary }}</p>
+                <h4 v-html="article._highlightedTitle || article.title"></h4>
+                <p v-html="article._highlightedSummary || article.summary"></p>
                 <span class="read-more">阅读全文 →</span>
               </div>
             </div>
@@ -308,7 +308,9 @@ const toggleTag = (tag) => {
 
 const handleSearch = () => {
   currentPage.value = 0
-  fetchArticles()
+  fetchArticles().then(() => {
+    highlightSearchResults()
+  })
 }
 
 const changePage = (page) => {
@@ -321,6 +323,19 @@ const goToArticle = (slug) => {
   router.push(`/knowledge/${slug}`)
 }
 
+const highlightText = (text, query) => {
+  if (!query || !text) return text
+  const regex = new RegExp(`(${query})`, 'gi')
+  return text.replace(regex, '<mark>$1</mark>')
+}
+
+const highlightSearchResults = () => {
+  articles.value.forEach(article => {
+    article._highlightedTitle = highlightText(article.title, searchQuery.value)
+    article._highlightedSummary = highlightText(article.summary, searchQuery.value)
+  })
+}
+
 const handleKeydown = (e) => {
   if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
     e.preventDefault()
@@ -328,10 +343,9 @@ const handleKeydown = (e) => {
   }
 }
 
-onMounted(() => {
-  fetchArticles()
-  fetchDomains()
-  fetchCategories()
+onMounted(async () => {
+  await Promise.all([fetchArticles(), fetchDomains(), fetchCategories()])
+  highlightSearchResults()
   window.addEventListener('keydown', handleKeydown)
 })
 
@@ -725,6 +739,14 @@ onUnmounted(() => {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.card-summary :deep(mark),
+.card-title :deep(mark) {
+  background: #ffeb3b;
+  color: #333;
+  padding: 0 2px;
+  border-radius: 2px;
 }
 
 .card-tags {

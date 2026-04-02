@@ -74,6 +74,7 @@ portfolio/
 - **首页** - 个人简介、技能展示、3D 粒子动画背景
 - **项目展示** - 卡片式布局，支持 Grid/List/画廊视图切换
 - **知识库** - Markdown 文章、分类体系、标签系统、目录树
+- **角色展示** - 角色一览、详细档案、故事时间线、语录图鉴
 - **关于我** - 个人经历、技能树、时间线
 - **留言板** - 访客留言、评论互动
 
@@ -90,6 +91,7 @@ portfolio/
 - Markdown 实时预览编辑器
 - 3D 粒子背景动画
 - 数据可视化大屏
+- **角色主题系统** - 10+ 种预设主题，支持自定义 JSON 配置，每个角色可有独特视觉风格
 
 ## 快速开始
 
@@ -168,6 +170,9 @@ spring:
 | 文章 | GET | /api/knowledge/articles | 获取文章列表 |
 | 画廊 | GET | /api/gallery/collections | 获取作品集 |
 | 留言 | POST | /api/contact | 提交留言 |
+| 角色 | GET | /api/characters | 获取角色列表 |
+| 角色 | GET | /api/characters/{id} | 获取角色详情 |
+| 角色 | GET | /api/characters/active | 获取激活角色 |
 
 ## 开发指南
 

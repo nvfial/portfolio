@@ -1,49 +1,112 @@
 -- ============================================
 -- Portfolio 数据库初始化数据
 -- 注意：此文件仅在 spring.jpa.hibernate.ddl-auto=create 时执行
+--
+-- 设计原则：数据应从GitHub仓库或本地上传自动获取，不应写死
 -- ============================================
 
--- 如果表已存在数据，先清空（可选）
--- TRUNCATE TABLE `project_tags`;
--- TRUNCATE TABLE `projects`;
--- TRUNCATE TABLE `contacts`;
--- TRUNCATE TABLE `testimonials`;
+-- 清空所有业务数据（保留表结构）
+TRUNCATE TABLE `project_images`;
+TRUNCATE TABLE `project_tags`;
+TRUNCATE TABLE `projects`;
+TRUNCATE TABLE `media_files`;
+TRUNCATE TABLE `comments`;
+TRUNCATE TABLE `knowledge_relations`;
+TRUNCATE TABLE `knowledge_nodes`;
+TRUNCATE TABLE `article_operations`;
+TRUNCATE TABLE `article_versions`;
+TRUNCATE TABLE `knowledge_articles`;
+TRUNCATE TABLE `knowledge_categories`;
+TRUNCATE TABLE `knowledge_domains`;
+TRUNCATE TABLE `gallery_artworks`;
+TRUNCATE TABLE `gallery_collections`;
+TRUNCATE TABLE `testimonials`;
+TRUNCATE TABLE `contacts`;
+TRUNCATE TABLE `visit_logs`;
+TRUNCATE TABLE `visitor_logs`;
+TRUNCATE TABLE `role_permissions`;
+TRUNCATE TABLE `user_roles`;
+TRUNCATE TABLE `permissions`;
+TRUNCATE TABLE `roles`;
+TRUNCATE TABLE `users`;
 
--- 插入示例项目数据
-INSERT INTO `projects` (`title`, `description`, `image_url`, `category`, `link`, `github`) VALUES
-('电商网站', '使用 Vue 3 和 Tailwind CSS 构建的响应式电商平台，支持购物车、支付集成和用户管理。', 'https://via.placeholder.com/400x250?text=E-Commerce', '前端', '#', '#'),
-('博客平台', 'Node.js + Express 后端，支持 Markdown 编辑、评论系统和SEO优化。', 'https://via.placeholder.com/400x250?text=Blog+Platform', '全栈', '#', '#'),
-('移动记账 App', 'React Native 开发，支持数据同步、图表分析和多币种管理。', 'https://via.placeholder.com/400x250?text=Budget+App', '移动端', '#', '#'),
-('设计系统', '完整的设计系统，包含组件库、设计规范和文档。', 'https://via.placeholder.com/400x250?text=Design+System', '设计', '#', '#'),
-('实时聊天应用', '使用 Socket.io 构建的实时聊天应用，支持群组、私聊和文件分享。', 'https://via.placeholder.com/400x250?text=Chat+App', '全栈', '#', '#'),
-('数据可视化仪表板', '交互式数据可视化平台，支持多种图表类型和数据导出。', 'https://via.placeholder.com/400x250?text=Dashboard', '前端', '#', '#')
-ON DUPLICATE KEY UPDATE `title` = VALUES(`title`);
+-- ============================================
+-- 基础配置数据（系统必需的初始化数据）
+-- ============================================
 
--- 插入项目标签
-INSERT INTO `project_tags` (`project_id`, `tag`) VALUES
-(1, 'Vue 3'), (1, 'Tailwind CSS'), (1, 'Pinia'),
-(2, 'Node.js'), (2, 'Express'), (2, 'MongoDB'),
-(3, 'React Native'), (3, 'Firebase'), (3, 'Chart.js'),
-(4, 'Figma'), (4, 'Storybook'), (4, 'Design Tokens'),
-(5, 'Socket.io'), (5, 'React'), (5, 'Node.js'),
-(6, 'D3.js'), (6, 'Vue 3'), (6, 'TypeScript')
-ON DUPLICATE KEY UPDATE `project_id` = VALUES(`project_id`);
+-- 插入默认角色
+INSERT INTO `roles` (`name`, `description`, `created_at`, `updated_at`) VALUES
+('ADMIN', '系统管理员，拥有所有权限', NOW(), NOW()),
+('USER', '普通用户，基本访问权限', NOW(), NOW()),
+('GUEST', '访客，仅有只读权限', NOW(), NOW())
+ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
 
--- 插入示例推荐信数据
-INSERT INTO `testimonials` (`author`, `content`) VALUES
-('张三', '非常专业的前端开发，代码质量很高，沟通也很顺畅。'),
-('李四', '项目交付及时，技术实力强，强烈推荐！'),
-('王五', '工作认真负责，能够很好地理解需求并实现。'),
-('赵六', '技术栈很全面，全栈开发能力突出。'),
-('钱七', '代码规范，文档完善，维护起来很方便。'),
-('孙八', '响应速度快，问题解决及时，合作愉快。')
-ON DUPLICATE KEY UPDATE `author` = VALUES(`author`);
+-- 插入默认权限
+INSERT INTO `permissions` (`name`, `description`, `created_at`, `updated_at`) VALUES
+('PROJECT_READ', '查看项目列表', NOW(), NOW()),
+('PROJECT_CREATE', '创建项目', NOW(), NOW()),
+('PROJECT_UPDATE', '更新项目', NOW(), NOW()),
+('PROJECT_DELETE', '删除项目', NOW(), NOW()),
+('PROJECT_ANALYZE', '分析项目（GitHub/本地）', NOW(), NOW()),
+('KNOWLEDGE_READ', '查看知识库', NOW(), NOW()),
+('KNOWLEDGE_MANAGE', '管理知识库', NOW(), NOW()),
+('GALLERY_READ', '查看画廊', NOW(), NOW()),
+('GALLERY_MANAGE', '管理画廊', NOW(), NOW()),
+('CONTACT_READ', '查看联系消息', NOW(), NOW()),
+('CONTACT_MANAGE', '管理联系消息', NOW(), NOW()),
+('TESTIMONIAL_READ', '查看推荐信', NOW(), NOW()),
+('TESTIMONIAL_MANAGE', '管理推荐信', NOW(), NOW()),
+('USER_MANAGE', '用户管理', NOW(), NOW()),
+('ANALYTICS_VIEW', '查看分析统计', NOW(), NOW())
+ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
 
+-- 为ADMIN角色分配所有权限
+INSERT INTO `role_permissions` (`role_id`, `permission_id`)
+SELECT r.id, p.id FROM `roles` r, `permissions` p WHERE r.name = 'ADMIN'
+ON DUPLICATE KEY UPDATE `role_id` = `role_id`;
 
+-- 为USER角色分配基本权限
+INSERT INTO `role_permissions` (`role_id`, `permission_id`)
+SELECT r.id, p.id FROM `roles` r, `permissions` p 
+WHERE r.name = 'USER' AND p.name IN ('PROJECT_READ', 'KNOWLEDGE_READ', 'GALLERY_READ', 'CONTACT_READ', 'TESTIMONIAL_READ')
+ON DUPLICATE KEY UPDATE `role_id` = `role_id`;
 
+-- 为GUEST角色分配只读权限
+INSERT INTO `role_permissions` (`role_id`, `permission_id`)
+SELECT r.id, p.id FROM `roles` r, `permissions` p 
+WHERE r.name = 'GUEST' AND p.name IN ('PROJECT_READ', 'KNOWLEDGE_READ', 'GALLERY_READ')
+ON DUPLICATE KEY UPDATE `role_id` = `role_id`;
 
+-- 插入默认管理员用户（密码：admin123，需要通过BCrypt加密存储）
+-- 注意：实际部署时请修改默认密码
+INSERT INTO `users` (`username`, `email`, `password`, `full_name`, `avatar_url`, `bio`, `is_active`, `created_at`, `updated_at`) VALUES
+('admin', 'admin@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '管理员', NULL, '系统管理员账号', 1, NOW(), NOW()),
+('demo', 'demo@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '演示用户', NULL, '演示账号', 1, NOW(), NOW())
+ON DUPLICATE KEY UPDATE `email` = VALUES(`email`);
 
+-- 为admin用户分配ADMIN角色
+INSERT INTO `user_roles` (`user_id`, `role_id`)
+SELECT u.id, r.id FROM `users` u, `roles` r WHERE u.username = 'admin' AND r.name = 'ADMIN'
+ON DUPLICATE KEY UPDATE `user_id` = `user_id`;
 
+-- 为demo用户分配USER角色
+INSERT INTO `user_roles` (`user_id`, `role_id`)
+SELECT u.id, r.id FROM `users` u, `roles` r WHERE u.username = 'demo' AND r.name = 'USER'
+ON DUPLICATE KEY UPDATE `user_id` = `user_id`;
 
+-- ============================================
+-- 知识库默认领域（可选）
+-- ============================================
+INSERT INTO `knowledge_domains` (`name`, `description`, `icon`, `sort_order`, `is_active`, `created_at`, `updated_at`) VALUES
+('技术文档', '技术相关文档和教程', 'book', 1, 1, NOW(), NOW()),
+('项目笔记', '项目开发笔记和总结', 'folder', 2, 1, NOW(), NOW()),
+('学习笔记', '学习过程中的记录', 'graduation-cap', 3, 1, NOW(), NOW())
+ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
 
-
+-- ============================================
+-- 注意：项目数据应通过以下方式获取：
+-- 1. GitHub仓库分析服务自动导入
+-- 2. 本地上传代码包解压分析
+-- 3. 手动通过管理后台上传
+-- 请勿在此文件中添加硬编码的项目数据
+-- ============================================

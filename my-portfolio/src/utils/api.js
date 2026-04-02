@@ -41,9 +41,15 @@ export const projectApi = {
   getAll: () => api.get('/projects'),
   getById: (id) => api.get(`/projects/${id}`),
   getByCategory: (category) => api.get(`/projects/category/${category}`),
+  getFeatured: () => api.get('/projects/featured'),
   create: (data) => api.post('/projects', data),
   update: (id, data) => api.put(`/projects/${id}`, data),
-  delete: (id) => api.delete(`/projects/${id}`)
+  delete: (id) => api.delete(`/projects/${id}`),
+  importFromGitHub: (data) => api.post('/projects/import/github', data),
+  importFromUpload: (formData) => api.post('/projects/import/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  reAnalyze: (id) => api.post(`/projects/${id}/reanalyze`)
 }
 
 export const testimonialApi = {
@@ -67,7 +73,8 @@ export const statsApi = {
   getIpStats: () => api.get('/admin/stats/ips'),
   getMessageStats: () => api.get('/admin/stats/messages'),
   getProjectStats: () => api.get('/admin/stats/projects'),
-  getDashboardData: () => api.get('/admin/dashboard')
+  getDashboardData: () => api.get('/admin/dashboard'),
+  getGeoStats: () => api.get('/admin/stats/geo')
 }
 
 export const knowledgeApi = {
@@ -79,7 +86,10 @@ export const knowledgeApi = {
   getFeaturedArticles: () => api.get('/knowledge/articles/featured'),
   searchArticles: (keyword, page = 0, size = 20) => api.get('/knowledge/articles/search', { params: { keyword, page, size } }),
   incrementView: (id) => api.post(`/knowledge/articles/${id}/view`),
-  toggleLike: (id) => api.post(`/knowledge/articles/${id}/like`)
+  toggleLike: (id) => api.post(`/knowledge/articles/${id}/like`),
+  toggleFavorite: (id) => api.post(`/knowledge/articles/${id}/favorite`),
+  getComments: (articleId) => api.get(`/knowledge/articles/${articleId}/comments`),
+  addComment: (articleId, content) => api.post(`/knowledge/articles/${articleId}/comments`, { content })
 }
 
 export const knowledgeCategoryApi = {
@@ -92,6 +102,23 @@ export const knowledgeCategoryApi = {
 export const knowledgeDomainApi = {
   getAll: () => api.get('/knowledge/domains'),
   getBySlug: (slug) => api.get(`/knowledge/domains/${slug}`)
+}
+
+export const mediaApi = {
+  getMediaList: (params) => api.get('/admin/media', { params }),
+  uploadMedia: (formData) => api.post('/admin/media/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  deleteMedia: (id) => api.delete(`/admin/media/${id}`)
+}
+
+export const characterApi = {
+  getAll: () => api.get('/characters'),
+  getActive: () => api.get('/characters/active'),
+  getById: (id) => api.get(`/characters/${id}`),
+  create: (data) => api.post('/characters', data),
+  update: (id, data) => api.put(`/characters/${id}`, data),
+  delete: (id) => api.delete(`/characters/${id}`)
 }
 
 export default api

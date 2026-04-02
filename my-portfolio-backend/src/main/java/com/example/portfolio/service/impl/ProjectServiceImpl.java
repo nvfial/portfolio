@@ -42,6 +42,14 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    @Cacheable(value = "projects", key = "featured")
+    public List<ProjectDTO> getFeatured() {
+        return repository.findByIsFeaturedTrueAndIsPublishedTrue().stream()
+                .map(mapper::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     @Async
     @Transactional
     @CacheEvict(value = "projects", allEntries = true)
@@ -73,6 +81,29 @@ public class ProjectServiceImpl implements ProjectService {
         project.setTags(dto.getTags());
         project.setLink(dto.getLink());
         project.setGithub(dto.getGithub());
+        project.setGithubRepo(dto.getGithubRepo());
+        project.setGithubRepoUrl(dto.getGithubRepoUrl());
+        project.setStars(dto.getStars());
+        project.setForks(dto.getForks());
+        project.setWatchers(dto.getWatchers());
+        project.setLanguage(dto.getLanguage());
+        project.setPrimaryLanguage(dto.getPrimaryLanguage());
+        project.setLanguages(dto.getLanguages());
+        project.setLicense(dto.getLicense());
+        project.setOpenIssues(dto.getOpenIssues());
+        project.setLastCommit(dto.getLastCommit());
+        project.setDescriptionExtended(dto.getDescriptionExtended());
+        project.setTopics(dto.getTopics());
+        project.setAnalysisStatus(dto.getAnalysisStatus());
+        project.setAnalysisError(dto.getAnalysisError());
+        project.setAnalyzedAt(dto.getAnalyzedAt());
+        project.setFileCount(dto.getFileCount());
+        project.setTotalLines(dto.getTotalLines());
+        project.setReadmeContent(dto.getReadmeContent());
+        project.setTechStack(dto.getTechStack());
+        project.setSortOrder(dto.getSortOrder());
+        project.setIsFeatured(dto.getIsFeatured());
+        project.setIsPublished(dto.getIsPublished());
         
         Project updated = repository.save(project);
         return mapper.toDTO(updated);
@@ -88,4 +119,3 @@ public class ProjectServiceImpl implements ProjectService {
         repository.deleteById(id);
     }
 }
-

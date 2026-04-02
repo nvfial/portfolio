@@ -12,6 +12,6 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
 
     @Query("SELECT p FROM Project p WHERE p.category = ?1")
     List<Project> findByCategory(String category);
+
+    List<Project> findByIsFeaturedTrueAndIsPublishedTrue();
 }
-
-

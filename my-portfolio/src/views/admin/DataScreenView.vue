@@ -49,6 +49,12 @@
         <div ref="pathChart" class="chart"></div>
       </div>
 
+      <!-- 访客地图 -->
+      <div class="chart-card large">
+        <h3>访客地理位置分布</h3>
+        <div ref="geoChart" class="chart"></div>
+      </div>
+
       <!-- 项目稳定度 -->
       <div class="stability-card large">
         <h3>项目稳定度</h3>
@@ -81,10 +87,12 @@ const currentTime = ref('')
 const trendChart = ref(null)
 const ipChart = ref(null)
 const pathChart = ref(null)
+const geoChart = ref(null)
 
 let trendChartInstance = null
 let ipChartInstance = null
 let pathChartInstance = null
+let geoChartInstance = null
 
 const updateTime = () => {
   const now = new Date()
@@ -95,6 +103,9 @@ const loadData = async () => {
   try {
     dashboardData.value = await statsApi.getDashboardData()
     projects.value = await projectApi.getAll()
+    
+    const geoData = await statsApi.getGeoStats()
+    dashboardData.value.geo = geoData
     
     updateCharts()
   } catch (error) {
@@ -172,6 +183,29 @@ const updateCharts = () => {
       }]
     })
   }
+  
+  // 访客地理位置分布
+  if (dashboardData.value.geo && geoChart.value) {
+    if (!geoChartInstance) {
+      geoChartInstance = echarts.init(geoChart.value)
+    }
+    const geoList = dashboardData.value.geo.topRegions || []
+    geoChartInstance.setOption({
+      tooltip: { trigger: 'axis' },
+      xAxis: {
+        type: 'value'
+      },
+      yAxis: {
+        type: 'category',
+        data: geoList.map(r => r.region)
+      },
+      series: [{
+        data: geoList.map(r => r.count),
+        type: 'bar',
+        itemStyle: { color: '#f59e0b' }
+      }]
+    })
+  }
 }
 
 const calculateStability = (project) => {
@@ -200,6 +234,7 @@ onMounted(() => {
     if (trendChartInstance) trendChartInstance.resize()
     if (ipChartInstance) ipChartInstance.resize()
     if (pathChartInstance) pathChartInstance.resize()
+    if (geoChartInstance) geoChartInstance.resize()
   })
 })
 
@@ -209,6 +244,7 @@ onUnmounted(() => {
   if (trendChartInstance) trendChartInstance.dispose()
   if (ipChartInstance) ipChartInstance.dispose()
   if (pathChartInstance) pathChartInstance.dispose()
+  if (geoChartInstance) geoChartInstance.dispose()
 })
 </script>
 

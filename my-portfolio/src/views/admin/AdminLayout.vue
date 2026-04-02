@@ -30,6 +30,11 @@
           <span>画廊</span>
         </RouterLink>
 
+        <RouterLink to="/admin/media" class="nav-item" :class="{ active: $route.path.startsWith('/admin/media') }">
+          <span class="nav-icon">📁</span>
+          <span>媒体管理</span>
+        </RouterLink>
+
         <RouterLink to="/admin/messages" class="nav-item" :class="{ active: $route.path === '/admin/messages' }">
           <span class="nav-icon">💬</span>
           <span>消息</span>
@@ -38,6 +43,16 @@
         <RouterLink to="/admin/screen" class="nav-item" :class="{ active: $route.path === '/admin/screen' }">
           <span class="nav-icon">📺</span>
           <span>数据大屏</span>
+        </RouterLink>
+
+        <RouterLink to="/admin/project-import" class="nav-item" :class="{ active: $route.path === '/admin/project-import' }">
+          <span class="nav-icon">📦</span>
+          <span>项目导入</span>
+        </RouterLink>
+
+        <RouterLink to="/admin/characters" class="nav-item" :class="{ active: $route.path.startsWith('/admin/characters') }">
+          <span class="nav-icon">👤</span>
+          <span>角色管理</span>
         </RouterLink>
 
         <button @click="handleLogout" class="nav-item logout">

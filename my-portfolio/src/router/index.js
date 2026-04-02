@@ -15,9 +15,15 @@ const DataScreenView = () => import('../views/admin/DataScreenView.vue')
 const ArticleEditorView = () => import('../views/admin/ArticleEditorView.vue')
 const ArticlesView = () => import('../views/admin/ArticlesView.vue')
 const GalleryView = () => import('../views/admin/GalleryView.vue')
+const MediaView = () => import('../views/admin/MediaView.vue')
+const ProjectImportView = () => import('../views/admin/ProjectImportView.vue')
+const CharacterManageView = () => import('../views/admin/CharacterManageView.vue')
 
 const KnowledgeView = () => import('../views/KnowledgeView.vue')
 const KnowledgeArticleView = () => import('../views/KnowledgeArticleView.vue')
+
+const CastView = () => import('../views/CastView.vue')
+const CharacterView = () => import('../views/CharacterView.vue')
 
 const routes = [
   { path: '/', component: HomeView, name: 'Home' },
@@ -27,6 +33,8 @@ const routes = [
   { path: '/testimonials', component: TestimonialsView, name: 'Testimonials' },
   { path: '/knowledge', component: KnowledgeView, name: 'Knowledge' },
   { path: '/knowledge/:slug', component: KnowledgeArticleView, name: 'KnowledgeArticle' },
+  { path: '/cast', component: CastView, name: 'Cast' },
+  { path: '/character/:id', component: CharacterView, name: 'Character' },
   { path: '/login', component: LoginView, name: 'Login' },
   {
     path: '/admin',
@@ -38,8 +46,11 @@ const routes = [
       { path: 'editor', component: ArticleEditorView, name: 'ArticleEditor' },
       { path: 'editor/:id', component: ArticleEditorView, name: 'ArticleEdit' },
       { path: 'gallery', component: GalleryView, name: 'AdminGallery' },
+      { path: 'media', component: MediaView, name: 'AdminMedia' },
       { path: 'messages', component: MessagesView, name: 'AdminMessages' },
-      { path: 'screen', component: DataScreenView, name: 'DataScreen' }
+      { path: 'screen', component: DataScreenView, name: 'DataScreen' },
+      { path: 'project-import', component: ProjectImportView, name: 'ProjectImport' },
+      { path: 'characters', component: CharacterManageView, name: 'CharacterManage' }
     ]
   }
 ]

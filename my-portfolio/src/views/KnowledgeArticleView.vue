@@ -67,12 +67,56 @@
                 <span class="icon">{{ hasLiked ? '❤️' : '🤍' }}</span>
                 {{ hasLiked ? '已赞' : '点赞' }} ({{ article.likeCount }})
               </button>
+              <button 
+                class="action-btn favorite-btn"
+                :class="{ favorited: hasFavorited }"
+                @click="toggleFavorite"
+              >
+                <span class="icon">{{ hasFavorited ? '⭐' : '☆' }}</span>
+                {{ hasFavorited ? '已收藏' : '收藏' }}
+              </button>
               <button class="action-btn" @click="shareArticle">
                 <span class="icon">📤</span> 分享
               </button>
             </div>
           </footer>
         </article>
+
+        <div v-if="article" class="comments-section">
+          <h3>评论 ({{ comments.length }})</h3>
+          <div class="comment-form" v-if="isAuthenticated">
+            <textarea 
+              v-model="newComment" 
+              placeholder="写下你的评论..."
+              rows="3"
+            ></textarea>
+            <button @click="submitComment" :disabled="!newComment.trim()">
+              提交评论
+            </button>
+          </div>
+          <div v-else class="login-prompt">
+            <p>登录后参与评论</p>
+          </div>
+          <div class="comments-list">
+            <div 
+              v-for="comment in comments" 
+              :key="comment.id"
+              class="comment-item"
+            >
+              <div class="comment-avatar">{{ comment.authorName?.charAt(0) || '?' }}</div>
+              <div class="comment-content">
+                <div class="comment-header">
+                  <span class="comment-author">{{ comment.authorName }}</span>
+                  <span class="comment-date">{{ formatDate(comment.createdAt) }}</span>
+                </div>
+                <p class="comment-text">{{ comment.content }}</p>
+              </div>
+            </div>
+            <div v-if="comments.length === 0" class="no-comments">
+              暂无评论，快来发表第一条评论吧！
+            </div>
+          </div>
+        </div>
 
         <div v-if="article" class="related-articles">
           <h3>相关文章</h3>
@@ -153,6 +197,18 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { knowledgeApi } from '../utils/api'
 import { marked } from 'marked'
+import hljs from 'highlight.js'
+
+marked.setOptions({
+  gfm: true,
+  breaks: true,
+  highlight: function(code, lang) {
+    if (lang && hljs.getLanguage(lang)) {
+      return hljs.highlight(code, { language: lang }).value
+    }
+    return hljs.highlightAuto(code).value
+  }
+})
 
 const route = useRoute()
 const router = useRouter()
@@ -164,10 +220,14 @@ const toc = ref([])
 const activeHeading = ref('')
 const showBackToTop = ref(false)
 const hasLiked = ref(false)
+const hasFavorited = ref(false)
+const comments = ref([])
+const newComment = ref('')
+const isAuthenticated = ref(false)
 
 const renderedContent = computed(() => {
   if (!article.value?.content) return ''
-  return marked(article.value.content)
+  return marked.parse(article.value.content)
 })
 
 const formatDate = (dateStr) => {
@@ -191,6 +251,7 @@ const fetchArticle = async () => {
       knowledgeApi.incrementView(result.id)
       generateToc(result.content)
       fetchRelatedArticles(result.category?.id, result.id)
+      fetchComments()
     }
   } catch (error) {
     console.error('获取文章失败:', error)
@@ -249,6 +310,40 @@ const toggleLike = async () => {
     article.value.likeCount += hasLiked.value ? 1 : -1
   } catch (error) {
     console.error('点赞失败:', error)
+  }
+}
+
+const toggleFavorite = async () => {
+  if (!article.value) return
+  
+  try {
+    await knowledgeApi.toggleFavorite(article.value.id)
+    hasFavorited.value = !hasFavorited.value
+  } catch (error) {
+    console.error('收藏失败:', error)
+  }
+}
+
+const fetchComments = async () => {
+  if (!article.value) return
+  
+  try {
+    const data = await knowledgeApi.getComments(article.value.id)
+    comments.value = data.content || []
+  } catch (error) {
+    console.error('获取评论失败:', error)
+  }
+}
+
+const submitComment = async () => {
+  if (!article.value || !newComment.value.trim()) return
+  
+  try {
+    await knowledgeApi.addComment(article.value.id, newComment.value)
+    newComment.value = ''
+    await fetchComments()
+  } catch (error) {
+    console.error('提交评论失败:', error)
   }
 }
 
@@ -641,6 +736,143 @@ watch(() => route.params.slug, () => {
 .action-btn.like-btn.liked {
   background: #ffeef0;
   color: #e83e8c;
+}
+
+.action-btn.favorite-btn {
+  background: #fff8e1;
+  color: #ffc107;
+}
+
+.action-btn.favorite-btn.favorited {
+  background: #fff3cd;
+  color: #ff9800;
+}
+
+.comments-section {
+  margin-top: 40px;
+  padding: 30px;
+  background: white;
+  border-radius: 16px;
+}
+
+.comments-section h3 {
+  font-size: 1.3rem;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.comment-form {
+  margin-bottom: 20px;
+}
+
+.comment-form textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.comment-form textarea:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.comment-form button {
+  margin-top: 10px;
+  padding: 10px 20px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.3s;
+}
+
+.comment-form button:hover:not(:disabled) {
+  background: #5568d3;
+  transform: translateY(-2px);
+}
+
+.comment-form button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.login-prompt {
+  padding: 20px;
+  text-align: center;
+  background: #f5f5f5;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.login-prompt p {
+  color: #666;
+  margin: 0;
+}
+
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.comment-item {
+  display: flex;
+  gap: 12px;
+  padding: 15px;
+  background: #f9f9f9;
+  border-radius: 12px;
+}
+
+.comment-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #667eea;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.comment-content {
+  flex: 1;
+}
+
+.comment-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 5px;
+}
+
+.comment-author {
+  font-weight: 600;
+  color: #333;
+}
+
+.comment-date {
+  font-size: 0.85rem;
+  color: #999;
+}
+
+.comment-text {
+  color: #555;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.no-comments {
+  text-align: center;
+  padding: 30px;
+  color: #999;
 }
 
 .related-articles {
