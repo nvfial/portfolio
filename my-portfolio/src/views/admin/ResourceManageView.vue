@@ -207,7 +207,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { resourceApi, resourceCategoryApi } from '../../utils/api'
 
@@ -364,8 +364,6 @@ const formatSize = (bytes) => {
   }
   return bytes.toFixed(1) + ' ' + units[i]
 }
-
-import { computed } from 'vue'
 
 onMounted(() => {
   loadResources()
