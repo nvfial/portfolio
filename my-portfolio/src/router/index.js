@@ -19,6 +19,7 @@ const MediaView = () => import('../views/admin/MediaView.vue')
 const ProjectImportView = () => import('../views/admin/ProjectImportView.vue')
 const CharacterManageView = () => import('../views/admin/CharacterManageView.vue')
 const ResourceManageView = () => import('../views/admin/ResourceManageView.vue')
+const ResourceCategoryManageView = () => import('../views/admin/ResourceCategoryManageView.vue')
 
 const KnowledgeView = () => import('../views/KnowledgeView.vue')
 const KnowledgeArticleView = () => import('../views/KnowledgeArticleView.vue')
@@ -56,7 +57,8 @@ const routes = [
       { path: 'screen', component: DataScreenView, name: 'DataScreen' },
       { path: 'project-import', component: ProjectImportView, name: 'ProjectImport' },
       { path: 'characters', component: CharacterManageView, name: 'CharacterManage' },
-      { path: 'resources', component: ResourceManageView, name: 'ResourceManage' }
+      { path: 'resources', component: ResourceManageView, name: 'ResourceManage' },
+      { path: 'resource-categories', component: ResourceCategoryManageView, name: 'ResourceCategoryManage' }
     ]
   }
 ]

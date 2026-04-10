@@ -441,3 +441,142 @@ CREATE TABLE `media_files` (
     INDEX `idx_file_type` (`file_type`),
     INDEX `idx_uploaded_by` (`uploaded_by`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='媒体文件表';
+
+-- ============================================
+-- 10. 资源共享表
+-- ============================================
+DROP TABLE IF EXISTS `download_logs`;
+DROP TABLE IF EXISTS `resources`;
+DROP TABLE IF EXISTS `resource_categories`;
+
+CREATE TABLE `resource_categories` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '分类ID',
+    `name` VARCHAR(100) NOT NULL COMMENT '分类名称',
+    `icon` VARCHAR(100) DEFAULT NULL COMMENT '分类图标',
+    `description` VARCHAR(500) DEFAULT NULL COMMENT '分类描述',
+    `parent_id` BIGINT DEFAULT NULL COMMENT '父分类ID',
+    `sort_order` INT DEFAULT 0 COMMENT '排序',
+    `is_active` BOOLEAN DEFAULT TRUE COMMENT '是否启用',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    INDEX `idx_parent_id` (`parent_id`),
+    INDEX `idx_sort_order` (`sort_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='资源分类表';
+
+CREATE TABLE `resources` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '资源ID',
+    `name` VARCHAR(255) NOT NULL COMMENT '资源名称',
+    `description` TEXT DEFAULT NULL COMMENT '资源描述',
+    `category_id` BIGINT DEFAULT NULL COMMENT '分类ID',
+    `type` VARCHAR(50) NOT NULL COMMENT '资源类型: AUDIO/VIDEO/DOCUMENT/IMAGE/ARCHIVE/SOFTWARE/OTHER',
+    `file_type` VARCHAR(50) DEFAULT NULL COMMENT '文件格式: pdf, mp4, zip...',
+    `file_size` BIGINT DEFAULT NULL COMMENT '文件大小(字节)',
+    `storage_path` VARCHAR(500) DEFAULT NULL COMMENT '存储路径',
+    `cdn_url` VARCHAR(500) DEFAULT NULL COMMENT 'CDN下载链接',
+    `preview_url` VARCHAR(500) DEFAULT NULL COMMENT '预览链接(图片/音视频)',
+    `thumbnail_url` VARCHAR(500) DEFAULT NULL COMMENT '缩略图',
+    `download_count` BIGINT DEFAULT 0 COMMENT '下载次数',
+    `view_count` BIGINT DEFAULT 0 COMMENT '查看次数',
+    `is_premium` BOOLEAN DEFAULT FALSE COMMENT '是否需要积分',
+    `required_points` INT DEFAULT 0 COMMENT '所需积分',
+    `is_active` BOOLEAN DEFAULT TRUE COMMENT '是否启用',
+    `sort_order` INT DEFAULT 0 COMMENT '排序',
+    `created_by` BIGINT DEFAULT NULL COMMENT '创建者ID',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    INDEX `idx_category_id` (`category_id`),
+    INDEX `idx_type` (`type`),
+    INDEX `idx_is_active` (`is_active`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='资源表';
+
+CREATE TABLE `download_logs` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '记录ID',
+    `user_id` BIGINT NOT NULL COMMENT '下载用户ID',
+    `resource_id` BIGINT NOT NULL COMMENT '资源ID',
+    `ip_address` VARCHAR(50) DEFAULT NULL COMMENT 'IP地址',
+    `user_agent` VARCHAR(500) DEFAULT NULL COMMENT '用户代理',
+    `downloaded_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '下载时间',
+    PRIMARY KEY (`id`),
+    INDEX `idx_user_id` (`user_id`),
+    INDEX `idx_resource_id` (`resource_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='下载记录表';
+
+-- ============================================
+-- 11. 角色系统表
+-- ============================================
+DROP TABLE IF EXISTS `character_skills`;
+DROP TABLE IF EXISTS `character_relationships`;
+DROP TABLE IF EXISTS `character_quotes`;
+DROP TABLE IF EXISTS `characters`;
+
+CREATE TABLE `characters` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '角色ID',
+    `name` VARCHAR(100) NOT NULL COMMENT '角色名称',
+    `title` VARCHAR(100) DEFAULT NULL COMMENT '称号/职位',
+    `description` TEXT DEFAULT NULL COMMENT '角色描述',
+    `image_url` VARCHAR(500) DEFAULT NULL COMMENT '角色图片',
+    `thumbnail_url` VARCHAR(500) DEFAULT NULL COMMENT '缩略图',
+    `rarity` VARCHAR(20) DEFAULT 'N' COMMENT '稀有度: N/R/SR/SSR/UR',
+    `element` VARCHAR(50) DEFAULT NULL COMMENT '元素属性',
+    `weapon_type` VARCHAR(50) DEFAULT NULL COMMENT '武器类型',
+    `affiliation` VARCHAR(100) DEFAULT NULL COMMENT '所属势力',
+    `birthplace` VARCHAR(100) DEFAULT NULL COMMENT '出生地',
+    `birthday` VARCHAR(20) DEFAULT NULL COMMENT '生日',
+    `voice_actor` VARCHAR(100) DEFAULT NULL COMMENT '配音演员',
+    `stats_hp` INT DEFAULT 0 COMMENT '生命值',
+    `stats_attack` INT DEFAULT 0 COMMENT '攻击力',
+    `stats_defense` INT DEFAULT 0 COMMENT '防御力',
+    `stats_speed` INT DEFAULT 0 COMMENT '速度',
+    `theme_preset` VARCHAR(50) DEFAULT 'golden' COMMENT '主题预设',
+    `custom_theme_config` TEXT DEFAULT NULL COMMENT '自定义主题JSON',
+    `is_active` BOOLEAN DEFAULT TRUE COMMENT '是否启用',
+    `sort_order` INT DEFAULT 0 COMMENT '排序',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    INDEX `idx_rarity` (`rarity`),
+    INDEX `idx_element` (`element`),
+    INDEX `idx_affiliation` (`affiliation`),
+    INDEX `idx_is_active` (`is_active`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='角色表';
+
+CREATE TABLE `character_quotes` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '语录ID',
+    `character_id` BIGINT NOT NULL COMMENT '角色ID',
+    `quote` TEXT NOT NULL COMMENT '语录内容',
+    `source` VARCHAR(200) DEFAULT NULL COMMENT '语录出处',
+    `sort_order` INT DEFAULT 0 COMMENT '排序',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    CONSTRAINT `fk_quote_character` FOREIGN KEY (`character_id`) REFERENCES `characters` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='角色语录表';
+
+CREATE TABLE `character_relationships` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '关系ID',
+    `character_id` BIGINT NOT NULL COMMENT '角色ID',
+    `related_id` BIGINT NOT NULL COMMENT '关联角色ID',
+    `relationship_type` VARCHAR(50) NOT NULL COMMENT '关系类型: family/partner/rival/friend/enemy',
+    `description` VARCHAR(200) DEFAULT NULL COMMENT '关系描述',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    CONSTRAINT `fk_rel_character` FOREIGN KEY (`character_id`) REFERENCES `characters` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_rel_related` FOREIGN KEY (`related_id`) REFERENCES `characters` (`id`) ON DELETE CASCADE,
+    INDEX `idx_character_id` (`character_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='角色关系表';
+
+CREATE TABLE `character_skills` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '技能ID',
+    `character_id` BIGINT NOT NULL COMMENT '角色ID',
+    `name` VARCHAR(100) NOT NULL COMMENT '技能名称',
+    `description` TEXT DEFAULT NULL COMMENT '技能描述',
+    `skill_type` VARCHAR(50) DEFAULT NULL COMMENT '技能类型: passive/active/ultimate',
+    `element` VARCHAR(50) DEFAULT NULL COMMENT '元素属性',
+    `icon_url` VARCHAR(500) DEFAULT NULL COMMENT '技能图标',
+    `effect_data` TEXT DEFAULT NULL COMMENT '效果数据JSON',
+    `sort_order` INT DEFAULT 0 COMMENT '排序',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    CONSTRAINT `fk_skill_character` FOREIGN KEY (`character_id`) REFERENCES `characters` (`id`) ON DELETE CASCADE,
+    INDEX `idx_character_id` (`character_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='角色技能表';

@@ -60,6 +60,11 @@
           <span>资源管理</span>
         </RouterLink>
 
+        <RouterLink to="/admin/resource-categories" class="nav-item" :class="{ active: $route.path.startsWith('/admin/resource-categories') }">
+          <span class="nav-icon">📂</span>
+          <span>分类管理</span>
+        </RouterLink>
+
         <button @click="handleLogout" class="nav-item logout">
           <span class="nav-icon">🚪</span>
           <span>退出登录</span>
